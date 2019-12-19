@@ -1,0 +1,56 @@
+function fnListarSolicitantes() {
+    filtro.numero = $("#ddlTipoEntidad").val();
+    filtro.codigo = $("#ddlGrupo").val();
+    $.ajax({
+        headers: {'X-CSRF-TOKEN': token},
+        type: "POST",
+        url: url + "listar",
+        dataType: 'json',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(filtro),
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader("Content-Encoding", "gzip");
+        },
+        success: function (jsondata) {
+            var oTblReport = $("#dataTable").DataTable({
+                destroy: true,ordering: true,"order": [[ 0, "desc" ]],
+                data: jsondata,
+                "columns": [
+                    {"data": "grupoEntidad", className: "text-center"},
+                    {"data": "fecha"},
+                    {
+                        "data": "codigo",
+                        "render": function (data, type, row, meta) {
+                            if (type === 'display') {
+                                data = '<a href="#" onclick="fnObtnerSolicitante(\'' + data + '\'\)" ><i class="far fa-edit"></i></a>';
+                            }
+                            return data;
+                        }, width: '4%', className: "text-center",
+                    },
+                    {
+                        "data": "codigo",
+                        "render": function (data, type, row, meta) {
+                            if (type === 'display' && row.estado == 'ACTIVO') {
+                                data = '<a href="#" onclick="fnEliminar(\'' + data + '\'\)"><i class="far fa-trash-alt"></i></a>';
+                            } else {
+                                data = "";
+                            }
+                            return data;
+                        }, width: '3%', className: "text-center",
+                    }
+                ],
+                language: {
+                    url: CONTEXTPATH + '/resources/content/datatables/1.10.9/i18n/Spanish.json'
+                },
+                createdRow: function (row, data, dataIndex) {
+                    if (data.estado == 'INACTIVO') {
+                        $(row).addClass('text-danger');
+                    }
+                }
+            });
+        },
+        error: function (xhr, status, error) {
+            toastr.error("ERROR: ERROR INTERNO", "Error");
+        }
+    });
+}
